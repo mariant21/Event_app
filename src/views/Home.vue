@@ -1,40 +1,9 @@
 <template>
-  <div class="container main-container">
-    <!-- <header class="jumbotron">
-      <h1> HAI CA IL TERMINI !!! :))) </h1>
-      <h3>{{ content }}</h3>
-    </header> -->
-    <div class="row "> 
-      <div class="col-md-4"> <CalendarMonth/></div>
-      <div class="col-md-8">Events
-        <div>          
-          <h1> HAI CA IL TERMINI !!! :))) </h1>    
-        </div>
-        <div class="list">
-          <table class="table table-bordered">
-           <thead>
-            <div>Titlu:
-              <ul>-</ul>
-            </div>
-          </thead>
-          <thead>
-            <div>Descriere:
-              <ul>-</ul>
-            </div>
-          </thead>
-          <thead>
-            <div>Durata:
-              <ul>-</ul>
-            </div>
-          </thead>
-          <thead>
-            <div>Cost:
-              <ul>-</ul>
-            </div>
-          </thead>
-          
-          </table>
-        </div>
+  <div class="container-fluid main-container fixed-top">
+    <div class="row">
+      <div class="col-md-7 main-col"><CalendarMonth /></div>
+      <div class="col-md-5 main-col">
+        <ListOfEvents />
       </div>
     </div>
   </div>
@@ -42,10 +11,9 @@
 
 
 <script>
-
-import CalendarMonthVue from '@/components/calendar/CalendarMonth';
-import CalendarMonth from '../components/calendar/CalendarMonth';
-
+import CalendarMonthVue from "@/components/calendar/CalendarMonth";
+import CalendarMonth from "../components/calendar/CalendarMonth";
+import ListOfEvents from "../components/ListOfEvents.vue";
 
 export default {
   name: "HomePage",
@@ -53,43 +21,32 @@ export default {
     return {
       content: "",
     };
-    
   },
-    components :{ CalendarMonthVue, CalendarMonth },
- 
- 
+  components: { CalendarMonthVue, CalendarMonth, ListOfEvents },
 };
 </script>
-<style>
-
-[class*="col"]{
+<style scoped>
+[class*="col"] {
   padding: 1rem;
-  background-color: #ee0000;
   border: 2px solid #fff;
-  color: #fff;
+  color: black;
   text-align: center;
 }
-.list{
-  text-align: left;
-  padding-right: 5px;
-}
-.table-subs{
-  max-width:90vw !important;
-}
+
 .main-container {
-  height: 85vh !important;
-  width: 94vw !important;
+  height: 95vh !important;
+  width: 97vw !important;
   max-width: 100vw !important;
-  margin-top: 1.5vw !important;
-  margin-left: -4vw !important;
-
-  /* right: 0 !important; */
-  background-color: black !important ;
+  margin-top: 5vw !important;
+  margin-left: 1.5vw !important;
 }
 
-body { 
+.main-col {
+  height: 95vh !important;
+}
+
+body {
   margin: 0;
   padding: 0;
 }
-
 </style>

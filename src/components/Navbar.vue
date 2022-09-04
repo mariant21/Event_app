@@ -1,23 +1,69 @@
 <template>
-    <nav class="navbar navbar-expand navbar-light bg-info "> 
-        <a href="/" class="navbar-brand">
-            <img src="../assets/RM.png" width="120" height="50" alt="">
+    <nav class="navbar navbar-expand navbar-dark bg-primary ">
+      <a href="/" class="navbar-brand">
+        <img src="../assets/RM.png" width="150" height="40" alt="">
       </a>
-      <div class="navbar-nav ml-auto">
+      <div class="navbar-nav mr-auto">
         <li class="nav-item">
           <router-link to="/home" class="nav-link">
             <font-awesome-icon icon="home" /> Home
           </router-link>
         </li>
+        <li v-if="showAdminBoard" class="nav-item">
+          <btn class="btn btn-info">Add event </btn>
+        </li> 
       </div>
 
-      <div  class="navbar-nav ms-auto">
-        <li class="nav-item nav-right">
+      <div v-if="!currentUser" class="navbar-nav ml-auto">
+        <li class="nav-item">
           <router-link to="/login" class="nav-link">
             <font-awesome-icon icon="sign-in-alt" /> Login
           </router-link>
         </li>
       </div>
 
+      <div v-if="currentUser" class="navbar-nav ml-auto right-navbar">
+        <li class="nav-item">
+          <router-link to="/profile" class="nav-link">
+            <font-awesome-icon icon="user" />
+            {{ currentUser.username }}
+          </router-link>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" @click="logOut">
+            <font-awesome-icon icon="sign-out-alt" /> LogOut
+          </a>
+        </li>
+      </div>
     </nav>
 </template>
+
+<script>
+export default {
+    name: 'NavBar',
+    computed: {
+    currentUser() {
+      return this.$store.state.auth.user;
+    },
+    showAdminBoard() {
+      if (this.currentUser && this.currentUser['roles']) {
+        return this.currentUser['roles'].includes('ROLE_ADMIN');
+      }
+      return false;
+    },
+  },
+  methods: {
+    logOut() {
+      this.$store.dispatch('auth/logout');
+      this.$router.push('/login');
+    }
+  },
+}
+</script>
+
+<style scoped>
+.right-navbar{
+  position:absolute;
+  right:10px;
+}
+</style>

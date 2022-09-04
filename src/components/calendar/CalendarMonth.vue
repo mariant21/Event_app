@@ -166,6 +166,7 @@ export default {
 <style scoped>
 .calendar-month {
   position: relative;
+  height: 75vh !important;
   background-color: var(--grey-200);
   border: solid 1px var(--blue-300);
 }
