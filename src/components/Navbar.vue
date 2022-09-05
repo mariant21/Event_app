@@ -9,9 +9,6 @@
             <font-awesome-icon icon="home" /> Home
           </router-link>
         </li>
-        <li v-if="showAdminBoard" class="nav-item">
-          <btn class="btn btn-info">Add event </btn>
-        </li> 
       </div>
 
       <div v-if="!currentUser" class="navbar-nav ml-auto">
@@ -51,6 +48,19 @@ export default {
       }
       return false;
     },
+    setup() {
+    const popupTriggers = ref({
+      buttonTrigger: false,
+      timedTrigger: false,
+    });
+    const TogglePopup = (trigger) => {
+      popupTriggers.value[trigger] = !popupTriggers.value[trigger];
+    };
+
+    const CheckPopup = (trigger) => {
+      return popupTriggers.value[trigger];
+    };
+    }
   },
   methods: {
     logOut() {

@@ -1,53 +1,104 @@
 <template>
-  <h1>List of events</h1>
+  <div class="container-fluid list-header">
+    <div class="row">
+      <h1 class="col-md-9">List of events</h1>
+      <btn
+        class="col-md-3 btn btn-info"
+        @click="() => TogglePopup('buttonTriggerAdd')"
+        >Add event
+      </btn>
+    </div>
+  </div>
+  <PopupWindow
+    v-if="CheckPopup('buttonTriggerAdd')"
+    :TogglePopup="() => TogglePopup('buttonTriggerAdd')"
+    Title="Adaugare eveniment"
+    Class="big"
+  >
+    <Form @submit.prevent="addEvent" class="popup-form">
+      <div class="textarea mb-3">
+        <label for="title" class="form-label">Titlu:</label>
+        <input name="title" class="form-control" id="title" />
+      </div>
+      <div class="textarea mb-3">
+        <label for="description" class="form-label">Descriere</label>
+        <textarea
+          name="description"
+          class="form-control"
+          id="description"
+          rows="2"
+        ></textarea>
+      </div>
+      <div class="textarea mb-3 container-fluid date-zone">
+        <div class="row">
+          <div class="col-md-6 date-zone">
+            <label for="price" class="form-label">Pret:</label>
+            <input name="price" class="form-control" id="price" />
+          </div>
+          <div class="col-md-6 date-zone">
+            <label for="participants" class="form-label">Locuri:</label>
+            <input name="participants" class="form-control" id="participants" />
+          </div>
+        </div>
+      </div>
+      <div class="textarea mb-3 container-fluid date-zone">
+        <div class="row">
+          <div class="col-md-6 date-zone">
+            <label for="points" class="form-label"
+              >Data inceput:&nbsp;&nbsp;</label
+            >
+            <input
+              type="date"
+              id="start"
+              name="start"
+              value="2022-07-22"
+              min="2022-07-01"
+              max="2022-12-31"
+            />
+          </div>
+          <div class="col-md-6 date-zone">
+            <label for="points" class="form-label"
+              >Data final:&nbsp;&nbsp;</label
+            >
+            <input
+              type="date"
+              id="end"
+              name="end"
+              value="2022-07-22"
+              min="2022-07-01"
+              max="2022-12-31"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="textarea mb-3 ml-200">
+        <label for="title" class="form-label">Titlu:</label>
+        <input
+          class="row form-control-lg ml-1"
+          type="file"
+          ref="image"
+          id="image"
+        />
+      </div>
+      <button class="btn btn-primary">
+        <span>Adauga eveniment</span>
+      </button>
+    </Form>
+  </PopupWindow>
   <hr />
   <div class="list scrollable">
     <table class="table table-bordered container">
       <tbody>
         <div class="row" v-for="event in eventList" v-bind:key="event.id">
           <Event
-            Picture="party.jpg"
-            :Title=event.title
-            :Description=event.description
-            :BeginDate=event.beginDate
-            :EndDate=event.endDate
-            :Price=event.price
-            :MaxParticipants=event.maxParticipants
-          />
-        </div>
-        <div class="row">
-          <Event
-            Picture="party.jpg"
-            Title="Petrecere mare"
-            Description="Petrecere foarte mare in aer liber cu lumini si fum si alea alea"
-          />
-        </div>
-        <div class="row">
-          <Event
-            Picture="vara.jpg"
-            Title="Eveniment de vara"
-            Description="Eveniment relaxant la piscina. Super relaxant si dragut summer"
-          />
-        </div>
-        <div class="row">
-          <Event
-            Picture="concert.jpg"
-            Title="Concert simfonic"
-            Description="Concert de opera clasica cu vioara si multe smecherii"
-          />
-        </div>
-        <div class="row">
-          <Event
-            Picture="concert.jpg"
-            Title="Alt concert"
-            Description="Alt concert de opera tot cu vioara si smecherii de genu"
-          />
-        </div>
-        <div class="row">
-          <Event
-            Picture="concert.jpg"
-            Title="Cumva cumva alt concert"
-            Description="N-are rost sa ma tot repet. Nici sus nu stiu de ce am mai scris"
+            :Picture="event.picture"
+            :EventId="event.id"
+            :Title="event.title"
+            :Description="event.description"
+            :BeginDate="event.beginDate"
+            :EndDate="event.endDate"
+            :Price="event.price"
+            :MaxParticipants="event.maxParticipants"
           />
         </div>
       </tbody>
@@ -56,7 +107,10 @@
 </template>
 
 <script>
+import { start } from "@popperjs/core";
+
 import Event from "../components/Event.vue";
+import PopupWindow from "./PopupWindows.vue";
 import axios from "axios";
 import { ref } from "@vue/reactivity";
 import { useStore } from "vuex";
@@ -65,24 +119,93 @@ const API_URL = "http://localhost:8080/api/v1/";
 export default {
   name: "ListOfEvents",
   setup() {
+    const popupTriggers = ref({
+      buttonTrigger: false,
+      timedTrigger: false,
+    });
+    const TogglePopup = (trigger) => {
+      popupTriggers.value[trigger] = !popupTriggers.value[trigger];
+    };
+
+    const CheckPopup = (trigger) => {
+      return popupTriggers.value[trigger];
+    };
+
     const store = useStore();
     const eventList = ref();
+    const participationsList = ref();
 
     axios
       .get(API_URL + "events/", {
         headers: {
-          Authorization: `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbkBsaWNlbnRhLnJvIiwiaWF0IjoxNjYyMjgyOTk1LCJleHAiOjE2NjIzNjkzOTV9.xT_QRwJezuBGNyRmIPK2Jm0viDbVNueueGSY7rq9KAlSfiSjFsiZ7XPlqFR6Nj8vhDF8182kfNtmDl1-97L-3Q`,
+          Authorization: `Bearer ` + store.state.auth.user.accessToken,
         },
       })
       .then((response) => {
-        console.log(response.data)
+        console.log(response.data);
         eventList.value = response.data;
       });
 
-      return {eventList}
+    axios
+      .get(
+        "http://localhost:8080/api/v1/participations/" +
+          store.state.auth.user.id,
+        {
+          headers: {
+            Authorization: `Bearer ` + store.state.auth.user.accessToken,
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response.data);
+        participationsList.value = response.data;
+        updateEventList()
+      });
 
+    const updateEventList = () => {
+      if (eventList != undefined && participationsList != undefined) {
+        const finalEventList = [];
+        for (let evt of eventList.value) {
+          let found = false;
+          for (let { id, user, event } of participationsList.value) {
+            if (evt.id == event.id) {
+              found = true;
+            }
+          }
+          if (found == false) {
+            finalEventList.push(evt);
+          }
+        }
+        eventList.value = finalEventList;
+      }
+    };
+
+    const addEvent = (newEvent) => {
+      axios
+        .post(
+          API_URL + "events/addEvent",
+          {
+            title: newEvent.target.elements.description.value,
+            description: newEvent.target.elements.description.value,
+            beginDate: newEvent.target.elements.start.value,
+            endDate: newEvent.target.elements.end.value,
+            price: newEvent.target.elements.price.value,
+            maxParticipants: newEvent.target.elements.participants.value,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ` + store.state.auth.user.accessToken,
+            },
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+        });
+    };
+
+    return { eventList, TogglePopup, CheckPopup, addEvent, updateEventList };
   },
-  components: { Event },
+  components: { Event, PopupWindow },
 };
 </script>
 
@@ -100,5 +223,24 @@ export default {
 }
 .table-subs {
   max-width: 90vw !important;
+}
+
+.btn {
+  font-size: 23px;
+  color: white;
+}
+
+.date-zone {
+  text-align: left;
+}
+
+.input-date {
+  position: relative;
+  left: 0;
+}
+
+.popup-form {
+  margin-left: 10px !important;
+  padding-left: 10px !important;
 }
 </style>

@@ -5,19 +5,33 @@
         <img :src="getImgUrl(Picture)" class="image" v-bind:alt="Picture" />
       </div>
       <div class="col-md-8 content-zone">
-        <h5>{{ Title }}</h5>
+        <div class="row">
+          <h5 class="col-md-10">{{ Title }}</h5>
+          <button
+            type="button"
+            class="col-md-2 btn btn-secondary delete-btn"
+            @click="DeleteEvent(EventId)"
+          >
+            X
+          </button>
+        </div>
         <hr class="line" />
         <p class="description">{{ Description }}</p>
         <div class="container-fluid bottom-content-container">
-            <div class="col-md-6 bottom-content">
-              <p>Data inceput: {{BeginDate}}</p>
-              <p>Data final: {{EndDate}}</p>
-            </div>
-            <div class="col-md-4 bottom-content">
-            <p>Pret: {{Price}} lei</p>
-            <p>Locuri: {{MaxParticipants}}</p>
-            </div>
-            <btn class="btn btn-primary btn-join" > Inscriete acum! </btn>
+          <div class="col-md-6 bottom-content">
+            <p>Data inceput: {{ BeginDate }}</p>
+            <p>Data final: {{ EndDate }}</p>
+          </div>
+          <div class="col-md-4 bottom-content">
+            <p>Pret: {{ Price }} lei</p>
+            <p>Locuri: {{ MaxParticipants }}</p>
+          </div>
+          <btn
+            class="btn btn-primary btn-join"
+            @click="ParticipateInEvent(EventId)"
+          >
+            Participa acum!
+          </btn>
         </div>
       </div>
     </div>
@@ -25,15 +39,61 @@
 </template>
 
 <script>
+import axios from "axios";
+import { useStore } from "vuex";
 
 export default {
   name: "Event",
-  props: ["Picture", "Title", "Description", "BeginDate", "EndDate", "MaxParticipants", "Price"],
+  props: [
+    "EventId",
+    "Picture",
+    "Title",
+    "Description",
+    "BeginDate",
+    "EndDate",
+    "MaxParticipants",
+    "Price",
+  ],
   setup() {
+    const store = useStore();
+
     const getImgUrl = (pic) => {
       return require("../assets/" + pic);
     };
-    return { getImgUrl };
+
+    const DeleteEvent = (eventId) => {
+      axios
+        .delete("http://localhost:8080/api/v1/events/delete/" + eventId, {
+          headers: {
+            Authorization: `Bearer ` + store.state.auth.user.accessToken,
+          },
+        })
+        .then((response) => {
+          console.log(response.data);
+          location.reload();
+        });
+    };
+
+    const ParticipateInEvent = (eventId) => {
+      axios
+        .post(
+          "http://localhost:8080/api/v1/participations/add/" +
+            store.state.auth.user.id +
+            "/" +
+            eventId,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ` + store.state.auth.user.accessToken,
+            },
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          location.reload();
+        });
+    };
+    return { getImgUrl, DeleteEvent, ParticipateInEvent };
   },
 };
 </script>
@@ -90,11 +150,19 @@ export default {
   margin-top: -5px;
 }
 
-.bottom-content{
-    font-size:15px;
+.bottom-content {
+  font-size: 15px;
 }
 
-.btn-join{
-    font-size:15px;
+.btn-join {
+  font-size: 15px;
+}
+
+.delete-btn {
+  padding: 2px;
+  font-size: 10px;
+  width: 3em;
+  height: 2.5em;
+  background-color: red;
 }
 </style>

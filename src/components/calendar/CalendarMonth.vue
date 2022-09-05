@@ -13,20 +13,25 @@
       />
     </div>
 
-    <CalendarWeekdays/>
+    <CalendarWeekdays />
 
-    <ol class="days-grid" >
+    <ol class="days-grid">
       <CalendarMonthDayItem
         v-for="day in days"
         :key="day.date"
         :day="day"
-        :is-today="day.date == today"  />
+        :is-today="day.date == today"
+        :eventList="getEventsForToday(day.date)"
+      />
     </ol>
   </div>
 </template>
 
 <script>
 import dayjs from "dayjs";
+import axios from "axios";
+import { useStore } from "vuex";
+import { ref } from "@vue/reactivity";
 import weekday from "dayjs/plugin/weekday";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import CalendarMonthDayItem from "./CalendarMonthDayItem";
@@ -44,12 +49,46 @@ export default {
     CalendarMonthDayItem,
     CalendarDateIndicator,
     CalendarDateSelector,
-    CalendarWeekdays
+    CalendarWeekdays,
+  },
+
+  setup() {
+    const store = useStore();
+    const participationsList = ref();
+
+    axios
+      .get(
+        "http://localhost:8080/api/v1/participations/" +
+          store.state.auth.user.id,
+        {
+          headers: {
+            Authorization: `Bearer ` + store.state.auth.user.accessToken,
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response.data);
+        participationsList.value = response.data;
+      });
+
+    const getEventsForToday = (currentDate) => {
+      const eventsForToday = [];
+      if (participationsList.value != undefined) {
+        for (let { id, user, event } of participationsList.value) {
+          if (event.beginDate <= currentDate && event.endDate >= currentDate) {
+            eventsForToday.push({"participationId": id, "title":event.title});
+          }
+        }
+      }
+      return eventsForToday
+    };
+
+    return { participationsList, getEventsForToday };
   },
 
   data() {
     return {
-      selectedDate: dayjs()
+      selectedDate: dayjs(),
     };
   },
 
@@ -58,7 +97,7 @@ export default {
       return [
         ...this.previousMonthDays,
         ...this.currentMonthDays,
-        ...this.nextMonthDays
+        ...this.nextMonthDays,
       ];
     },
 
@@ -84,7 +123,7 @@ export default {
           date: dayjs(`${this.year}-${this.month}-${index + 1}`).format(
             "YYYY-MM-DD"
           ),
-          isCurrentMonth: true
+          isCurrentMonth: true,
         };
       });
     },
@@ -98,7 +137,6 @@ export default {
         "month"
       );
 
-      
       // Prima zi a saptamanii sa fie Luni
       const visibleNumberOfDaysFromPreviousMonth = firstDayOfTheMonthWeekday
         ? firstDayOfTheMonthWeekday - 1
@@ -114,10 +152,11 @@ export default {
         (day, index) => {
           return {
             date: dayjs(
-              `${previousMonth.year()}-${previousMonth.month() +
-                1}-${previousMonthLastMondayDayOfMonth + index}`
+              `${previousMonth.year()}-${previousMonth.month() + 1}-${
+                previousMonthLastMondayDayOfMonth + index
+              }`
             ).format("YYYY-MM-DD"),
-            isCurrentMonth: false
+            isCurrentMonth: false,
           };
         }
       );
@@ -139,10 +178,10 @@ export default {
           date: dayjs(
             `${nextMonth.year()}-${nextMonth.month() + 1}-${index + 1}`
           ).format("YYYY-MM-DD"),
-          isCurrentMonth: false
+          isCurrentMonth: false,
         };
       });
-    }
+    },
   },
 
   methods: {
@@ -152,14 +191,12 @@ export default {
 
     selectDate(newSelectedDate) {
       this.selectedDate = newSelectedDate;
-    }
-  },
-  
-  click() {
-      
-      console.log('A fost selectat!!!');
     },
-  
+  },
+
+  click() {
+    console.log("A fost selectat!!!");
+  },
 };
 </script>
 
@@ -196,6 +233,5 @@ export default {
   grid-column-gap: var(--grid-gap);
   grid-row-gap: var(--grid-gap);
   border-top: solid 1px var(--grey-200);
-  
 }
 </style>
